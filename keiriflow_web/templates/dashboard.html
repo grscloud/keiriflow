@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>KeiriFlow - ホーム</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 font-sans">
+    <nav class="bg-white shadow-sm border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center space-x-6">
+            <span class="text-xl font-bold text-blue-600">KeiriFlow</span>
+            <a href="{% url 'dashboard' %}" class="text-blue-600 font-bold text-sm">ホーム</a>
+            {% if is_admin %}
+                <a href="{% url 'master_data' %}" class="text-gray-600 hover:text-blue-600 text-sm">マスタ管理</a>
+            {% endif %}
+        </div>
+        <div class="flex items-center space-x-4">
+            <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                {% if is_platform_admin %}システムプラットフォーム{% else %}{{ tenant.company_name }}{% endif %}
+            </span>
+            <form action="{% url 'logout' %}" method="post" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="text-sm text-red-600 hover:text-red-800">ログアウト</button>
+            </form>
+        </div>
+    </nav>
+
+    {% if messages %}
+        <div class="max-w-7xl mx-auto mt-4 px-4">
+            {% for message in messages %}
+                <div class="p-4 rounded-lg bg-amber-100 text-amber-800 text-sm mb-2">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <main class="max-w-7xl mx-auto mt-8 px-4 pb-12">
+        <div class="flex items-center space-x-3 mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">こんにちは、{{ request.user.username }} さん</h1>
+            <span class="text-xs font-bold px-2 py-0.5 rounded {% if is_platform_admin %}bg-purple-100 text-purple-800{% elif is_admin %}bg-red-100 text-red-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                {% if is_platform_admin %}最高システム管理者{% else %}{{ request.user.get_role_display }}{% endif %}
+            </span>
+        </div>
+
+        {% if is_platform_admin %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-purple-200 border-t-4 border-t-purple-600">
+                <p class="text-sm text-gray-500 font-medium">プラットフォーム導入企業数（テナント数）</p>
+                <p class="text-3xl font-bold text-purple-700 mt-2">{{ total_tenants }} 社区</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-purple-200 border-t-4 border-t-purple-600">
+                <p class="text-sm text-gray-500 font-medium">全プラットフォーム登録ユーザー総数</p>
+                <p class="text-3xl font-bold text-gray-800 mt-2">{{ total_global_users }} 名</p>
+            </div>
+        </div>
+        
+        <div class="bg-purple-50 border border-purple-200 rounded-lg p-6">
+            <h3 class="text-purple-800 font-bold mb-2">⚙️ システムグローバルメンテナンス</h3>
+            <p class="text-sm text-purple-600 mb-4">新企業のデータベース開設、契約プランの変更、およびグローバル監査はDjango標準管理サイトからおこなってください。</p>
+            <a href="/admin/" target="_blank" class="bg-purple-600 text-white text-sm font-bold py-2.5 px-5 rounded hover:bg-purple-700 shadow-sm transition inline-block">
+                Django 管理サイト(后台)を開く ↗
+            </a>
+        </div>
+
+        {% elif is_admin %}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <p class="text-sm text-gray-500 font-medium">在籍社員数</p>
+                <p class="text-3xl font-bold text-gray-800 mt-2">{{ total_employees }} 名</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <p class="text-sm text-gray-500 font-medium">未処理の承認待ち案件</p>
+                <p class="text-3xl font-bold text-amber-600 mt-2">{{ pending_approvals }} 件</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <p class="text-sm text-gray-500 font-medium">今月の経費総額</p>
+                <p class="text-3xl font-bold text-blue-600 mt-2">{{ monthly_spend }}</p>
+            </div>
+        </div>
+        
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <h3 class="text-blue-800 font-bold mb-2">💡 管理者クイックアクション</h3>
+            <p class="text-sm text-blue-600 mb-4">新入社員の配属や、取引先・プロジェクトマスタの登録は右上のマスタ管理から行えます。</p>
+            <a href="{% url 'master_data' %}" class="bg-blue-600 text-white text-sm font-bold py-2 px-4 rounded hover:bg-blue-700 transition">マスタ管理画面へ</a>
+        </div>
+
+        {% else %}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 border-l-4 border-l-gray-400">
+                <p class="text-sm text-gray-500 font-medium">下書き中の申請</p>
+                <p class="text-3xl font-bold text-gray-700 mt-2">{{ my_drafts }} 件</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 border-l-4 border-l-amber-500">
+                <p class="text-sm text-gray-500 font-medium">審査中の申請</p>
+                <p class="text-3xl font-bold text-amber-600 mt-2">{{ my_processing }} 件</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 border-l-4 border-l-green-500">
+                <p class="text-sm text-gray-500 font-medium">今月の精算完了額</p>
+                <p class="text-3xl font-bold text-green-600 mt-2">{{ my_approved_this_month }}</p>
+            </div>
+        </div>
+
+        <div class="bg-white p-8 rounded-lg shadow-sm border border-gray-200 text-center py-12">
+            <p class="text-gray-400 mb-4 text-sm">交通費、会議費などの経費精算申請はこちらから</p>
+            <button class="bg-emerald-600 text-white text-sm font-bold py-3 px-8 rounded-lg hover:bg-emerald-700 shadow-sm transition opacity-50 cursor-not-allowed" disabled>
+                ＋ 新規経費精算を申請する（第3段階で解放）
+            </button>
+        </div>
+        {% endif %}
+    </main>
+</body>
+</html>

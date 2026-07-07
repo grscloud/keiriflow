@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>KeiriFlow - マスタ管理</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 font-sans">
+    <nav class="bg-white shadow-sm border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center space-x-6">
+            <span class="text-xl font-bold text-blue-600">KeiriFlow</span>
+            <a href="{% url 'dashboard' %}" class="text-gray-600 hover:text-blue-600 text-sm">ホーム</a>
+            <a href="{% url 'master_data' %}" class="text-blue-600 font-bold text-sm">マスタ管理</a>
+        </div>
+        <div class="flex items-center space-x-4">
+            <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                {{ tenant.company_name }}
+            </span>
+            <form action="{% url 'logout' %}" method="post" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="text-sm text-red-600 hover:text-red-800">ログアウト</button>
+            </form>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto mt-8 px-4 pb-12">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">基本マスタデータ一覧・登録</h1>
+
+        {% if messages %}
+            <div class="mb-6">
+                {% for message in messages %}
+                    <div class="p-4 rounded-lg text-sm {% if message.tags == 'success' %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-lg font-bold text-gray-700 mb-4 border-b pb-2">🏢 部門マスタ</h2>
+                    <form action="{% url 'add_department' %}" method="post" class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100 grid grid-cols-2 gap-3">
+                        {% csrf_token %}
+                        <div><label class="block text-xs text-gray-500 mb-1">部門コード</label>{{ dept_form.department_code }}</div>
+                        <div><label class="block text-xs text-gray-500 mb-1">部門名</label>{{ dept_form.department_name }}</div>
+                        <div class="col-span-2 text-right"><button type="submit" class="bg-blue-600 text-white text-xs font-bold py-2 px-4 rounded hover:bg-blue-700 transition">＋ 部門を追加</button></div>
+                    </form>
+                    <ul class="divide-y divide-gray-100 max-h-48 overflow-y-auto">
+                        {% for dept in departments %}
+                            <li class="py-2.5 flex justify-between text-sm"><span class="font-mono text-gray-500">{{ dept.department_code }}</span><span class="text-gray-800 font-medium">{{ dept.department_name }}</span></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-lg font-bold text-gray-700 mb-4 border-b pb-2">🤝 取引先マスタ</h2>
+                    <form action="{% url 'add_customer' %}" method="post" class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100 grid grid-cols-2 gap-3">
+                        {% csrf_token %}
+                        <div><label class="block text-xs text-gray-500 mb-1">取引先コード</label>{{ cust_form.customer_code }}</div>
+                        <div><label class="block text-xs text-gray-500 mb-1">取引先名</label>{{ cust_form.customer_name }}</div>
+                        <div class="col-span-2 text-right"><button type="submit" class="bg-blue-600 text-white text-xs font-bold py-2 px-4 rounded hover:bg-blue-700 transition">＋ 取引先を追加</button></div>
+                    </form>
+                    <ul class="divide-y divide-gray-100 max-h-48 overflow-y-auto">
+                        {% for cust in customers %}
+                            <li class="py-2.5 flex justify-between text-sm"><span class="font-mono text-gray-500">{{ cust.customer_code }}</span><span class="text-gray-800 font-medium">{{ cust.customer_name }}</span></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 lg:col-span-2">
+                <h2 class="text-lg font-bold text-gray-700 mb-4 border-b pb-2">📂 案件（プロジェクト）マスタ</h2>
+                <form action="{% url 'add_project' %}" method="post" class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {% csrf_token %}
+                    <div><label class="block text-xs text-gray-500 mb-1">取引先</label>{{ proj_form.customer }}</div>
+                    <div><label class="block text-xs text-gray-500 mb-1">案件コード</label>{{ proj_form.project_code }}</div>
+                    <div><label class="block text-xs text-gray-500 mb-1">案件名</label>{{ proj_form.project_name }}</div>
+                    <div class="md:col-span-3 text-right"><button type="submit" class="bg-blue-600 text-white text-xs font-bold py-2 px-4 rounded hover:bg-blue-700 transition">＋ 案件を追加</button></div>
+                </form>
+                <ul class="divide-y divide-gray-100 max-h-48 overflow-y-auto">
+                    {% for proj in projects %}
+                        <li class="py-2.5 flex justify-between text-sm">
+                            <div><span class="font-mono text-gray-500 text-xs mr-2">[{{ proj.project_code }}]</span><span class="text-gray-800 font-medium">{{ proj.project_name }}</span></div>
+                            <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded self-center">{{ proj.customer.customer_name }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 lg:col-span-2">
+                <h2 class="text-lg font-bold text-gray-700 mb-4 border-b pb-2">👥 社員マスタ・アカウント開設</h2>
+                <form action="{% url 'add_employee' %}" method="post" class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {% csrf_token %}
+                    <div><label class="block text-xs text-gray-500 mb-1">ログインID</label>{{ emp_form.username }}</div>
+                    <div><label class="block text-xs text-gray-500 mb-1">パスワード</label>{{ emp_form.password }}</div>
+                    <div><label class="block text-xs text-gray-500 mb-1">役割・権限</label>{{ emp_form.role }}</div>
+                    <div><label class="block text-xs text-gray-500 mb-1">社員番号</label>{{ emp_form.employee_no }}</div>
+                    <div><label class="block text-xs text-gray-500 mb-1">姓</label>{{ emp_form.last_name }}</div>
+                    <div><label class="block text-xs text-gray-500 mb-1">名</label>{{ emp_form.first_name }}</div>
+                    <div class="col-span-2"><label class="block text-xs text-gray-500 mb-1">所属部門</label>{{ emp_form.department }}</div>
+                    <div class="col-span-2 md:col-span-4 text-right"><button type="submit" class="bg-blue-600 text-white text-xs font-bold py-2 px-4 rounded hover:bg-blue-700 transition">＋ 社員アカウントを開設</button></div>
+                </form>
+
+                <ul class="divide-y divide-gray-100 max-h-48 overflow-y-auto">
+                    {% for emp in employees %}
+                        <li class="py-2.5 flex justify-between text-sm">
+                            <div>
+                                <span class="font-mono text-gray-500 mr-2">{{ emp.employee_no }}</span>
+                                <span class="text-gray-800 font-medium">{{ emp.last_name }} {{ emp.first_name }}</span>
+                                <span class="text-xs text-gray-400 ml-1">(@{{ emp.user.username }} / {{ emp.department.department_name }})</span>
+                            </div>
+                            <span class="text-xs font-semibold px-2.5 py-0.5 rounded {% if emp.user.role == 'ADMIN' %}bg-red-100 text-red-800{% elif emp.user.role == 'APPROVER' %}bg-amber-100 text-amber-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ emp.user.get_role_display }}
+                            </span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
