@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>KeiriFlow - 経費精算一覧</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 font-sans">
+<nav class="bg-white shadow-sm border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center space-x-6">
+            <span class="text-xl font-bold text-blue-600">KeiriFlow</span>
+            <a href="{% url 'dashboard' %}" class="text-gray-600 hover:text-blue-600 text-sm">ホーム</a>
+            <a href="{% url 'expense_list' %}" class="text-gray-600 hover:text-blue-600 text-sm">経費精算</a>
+            
+            {% if request.user.is_staff or request.user.role.name == "会社管理者" %}
+                <a href="{% url 'master_data' %}" class="text-blue-600 font-bold text-sm">マスタ管理</a>
+            {% endif %}
+        </div>
+        
+        <div class="flex items-center space-x-4">
+            <span class="text-sm text-gray-600 font-medium">👤 {{ request.user.username }} さん</span>
+            <form action="{% url 'logout' %}" method="post" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="text-sm text-red-600 hover:text-red-800 font-semibold border border-red-200 hover:border-red-400 rounded-md px-3 py-1.5 transition">
+                    ログアウト
+                </button>
+            </form>
+        </div>
+    </nav>
+
+    {% if messages %}
+        <div class="max-w-6xl mx-auto mt-4 px-4">
+            {% for message in messages %}
+                <div class="p-4 rounded-lg bg-blue-100 text-blue-800 text-sm mb-2">{{ message }}</div>
+            {% endfor %} </div>
+    {% endif %}
+
+    <main class="max-w-6xl mx-auto mt-8 px-4 pb-12">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-2xl font-bold text-gray-800">経費精算管理</h1>
+            <a href="{% url 'expense_create' %}" class="bg-blue-600 text-white text-sm font-bold py-2.5 px-5 rounded-lg hover:bg-blue-700 shadow transition">
+                ＋ 新規経費精算を申請する
+            </a>
+        </div>
+
+        {% if pending_approvals %}
+        <div class="mb-10 bg-white border-t-4 border-t-amber-500 rounded-lg shadow-sm p-6">
+            <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center">🔔 承認待ちの申請（あなた宛て）</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-gray-600">
+                    <thead>
+                        <tr class="border-b bg-gray-50 text-gray-700 font-semibold">
+                            <th class="p-3">申請者</th>
+                            <th class="p-3">タイトル</th>
+                            <th class="p-3">金額</th>
+                            <th class="p-3">申請日</th>
+                            <th class="p-3">アクション</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in pending_approvals %}
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-3 font-medium">{{ report.user.username }}</td>
+                            <td class="p-3">{{ report.title }}</td>
+                            <td class="p-3 font-bold text-gray-800">¥{{ report.total_amount }}</td>
+                            <td class="p-3 text-xs text-gray-400">{{ report.submitted_at|date:"Y/m/d H:i" }}</td>
+                            <td class="p-3">
+                                <form action="{% url 'expense_process' report.id %}" method="post" class="flex items-center space-x-2">
+                                    {% csrf_token %}
+                                    <input type="text" name="comment" placeholder="コメント（任意）" class="px-2 py-1 border rounded text-xs outline-none focus:ring-1 focus:ring-blue-500">
+                                    <button type="submit" name="action" value="approve" class="bg-emerald-600 text-white text-xs font-bold py-1 px-3 rounded hover:bg-emerald-700">承認</button>
+                                    <button type="submit" name="action" value="reject" class="bg-red-600 text-white text-xs font-bold py-1 px-3 rounded hover:bg-red-700">差し戻し</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+            <h2 class="text-lg font-bold text-gray-800 mb-4">📄 自分の申請履歴</h2>
+            {% if my_reports %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-gray-500">
+                    <thead>
+                        <tr class="border-b text-gray-700 font-semibold bg-gray-50">
+                            <th class="p-3">タイトル</th>
+                            <th class="p-3">金額</th>
+                            <th class="p-3">ステータス</th>
+                            <th class="p-3">現在の処理者</th>
+                            <th class="p-3">作成日時</th>
+                            <th class="p-3 text-center">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in my_reports %}
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-3 font-medium text-gray-800">{{ report.title }}</td>
+                            <td class="p-3 font-bold text-gray-700">¥{{ report.total_amount }}</td>
+                            <td class="p-3">
+                                <span class="px-2 py-0.5 rounded text-xs font-bold 
+                                    {% if report.status == 'approved' %}bg-green-100 text-green-800
+                                    {% elif report.status == 'pending' %}bg-amber-100 text-amber-800
+                                    {% elif report.status == 'rejected' %}bg-red-100 text-red-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ report.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="p-3 text-sm text-gray-600">{{ report.current_approver.username|default:"-" }}</td>
+                            <td class="p-3 text-xs text-gray-400">{{ report.created_at|date:"Y/m/d H:i" }}</td>
+                            <td class="p-3 text-center">
+                                {% if report.status == 'draft' or report.status == 'rejected' %}
+                                    <a href="{% url 'expense_edit' report.id %}" class="inline-block text-xs bg-blue-50 text-blue-600 font-bold px-2.5 py-1 rounded hover:bg-blue-100 transition">
+                                        編集・再申請
+                                    </a>
+                                {% else %}
+                                    <span class="text-xs text-gray-300">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-gray-400 text-center py-8 text-sm">申請履歴がありません。</p>
+            {% endif %}
+        </div>
+    </main>
+</body>
+</html>

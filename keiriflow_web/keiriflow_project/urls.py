@@ -7,4 +7,5 @@ urlpatterns = [
     path('', include('users.urls')),
     # 根目录直接重定向到登录页面
     path('', RedirectView.as_view(url='/login/', permanent=False)),
+    path('expenses/', include('expenses.urls')),
 ]

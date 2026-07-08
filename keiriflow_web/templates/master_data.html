@@ -10,15 +10,20 @@
         <div class="flex items-center space-x-6">
             <span class="text-xl font-bold text-blue-600">KeiriFlow</span>
             <a href="{% url 'dashboard' %}" class="text-gray-600 hover:text-blue-600 text-sm">ホーム</a>
-            <a href="{% url 'master_data' %}" class="text-blue-600 font-bold text-sm">マスタ管理</a>
+            <a href="{% url 'expense_list' %}" class="text-gray-600 hover:text-blue-600 text-sm">経費精算</a>
+            
+            {% if request.user.is_staff or request.user.role.name == "会社管理者" %}
+                <a href="{% url 'master_data' %}" class="text-blue-600 font-bold text-sm">マスタ管理</a>
+            {% endif %}
         </div>
+        
         <div class="flex items-center space-x-4">
-            <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
-                {{ tenant.company_name }}
-            </span>
+            <span class="text-sm text-gray-600 font-medium">👤 {{ request.user.username }} さん</span>
             <form action="{% url 'logout' %}" method="post" class="inline">
                 {% csrf_token %}
-                <button type="submit" class="text-sm text-red-600 hover:text-red-800">ログアウト</button>
+                <button type="submit" class="text-sm text-red-600 hover:text-red-800 font-semibold border border-red-200 hover:border-red-400 rounded-md px-3 py-1.5 transition">
+                    ログアウト
+                </button>
             </form>
         </div>
     </nav>
